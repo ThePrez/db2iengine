@@ -154,7 +154,7 @@ but we do not want this so comment out the following line
         Field** field = fields;
         do
         {
-          if (strcmp((*field)->field_name, curColumn->field_name.str) == 0)
+          if (strcmp(((*field)->field_name).str, curColumn->field_name.str) == 0)
           {
             int rc = updateAssociatedSortSequence((*field)->charset(),
                                                   fileSortSequenceType,
@@ -228,34 +228,34 @@ but we do not want this so comment out the following line
         appendHere.append(STRING_WITH_LEN(") "));
       }
       
-      if (fk->delete_opt != Foreign_key::FK_OPTION_UNDEF)
+      if (fk->delete_opt != enum_fk_option::FK_OPTION_UNDEF)
       {
         appendHere.append(STRING_WITH_LEN("ON DELETE "));
         switch (fk->delete_opt)
         {
-          case Foreign_key::FK_OPTION_RESTRICT:
+          case enum_fk_option::FK_OPTION_RESTRICT:
             appendHere.append(STRING_WITH_LEN("RESTRICT ")); break;
-          case Foreign_key::FK_OPTION_CASCADE:
+          case enum_fk_option::FK_OPTION_CASCADE:
             appendHere.append(STRING_WITH_LEN("CASCADE ")); break;
-          case Foreign_key::FK_OPTION_SET_NULL:
+          case enum_fk_option::FK_OPTION_SET_NULL:
             appendHere.append(STRING_WITH_LEN("SET NULL ")); break;
-          case Foreign_key::FK_OPTION_NO_ACTION:
+          case enum_fk_option::FK_OPTION_NO_ACTION:
             appendHere.append(STRING_WITH_LEN("NO ACTION ")); break;
-          case Foreign_key::FK_OPTION_DEFAULT:
+          case enum_fk_option::FK_OPTION_SET_DEFAULT:
             appendHere.append(STRING_WITH_LEN("SET DEFAULT ")); break;
           default:
             return HA_ERR_CANNOT_ADD_FOREIGN; break;
         }
       }
       
-      if (fk->update_opt != Foreign_key::FK_OPTION_UNDEF)
+      if (fk->update_opt != enum_fk_option::FK_OPTION_UNDEF)
       {
         appendHere.append(STRING_WITH_LEN("ON UPDATE "));
         switch (fk->update_opt)
         {
-          case Foreign_key::FK_OPTION_RESTRICT:
+          case enum_fk_option::FK_OPTION_RESTRICT:
             appendHere.append(STRING_WITH_LEN("RESTRICT ")); break;
-          case Foreign_key::FK_OPTION_NO_ACTION:
+          case enum_fk_option::FK_OPTION_NO_ACTION:
             appendHere.append(STRING_WITH_LEN("NO ACTION ")); break;
           default:
             return HA_ERR_CANNOT_ADD_FOREIGN; break;
@@ -506,7 +506,7 @@ int ha_ibmdb2i::get_foreign_key_list(THD *thd, List<FOREIGN_KEY_INFO> *f_key_lis
       if (cstHdr->CstType[0] == QMY_CST_FK)   // If this is a foreign key constraint
       {
         FOREIGN_KEY_INFO f_key_info;
-        LEX_STRING *name= 0;
+        MYSQL_CONST_LEX_STRING *name= 0;
         tempPtr = (char*)(tempPtr + cstHdr->CstDefOff);
         FKCstDef = (FK_constraint_t*)tempPtr;
 
@@ -568,7 +568,7 @@ int ha_ibmdb2i::get_foreign_key_list(THD *thd, List<FOREIGN_KEY_INFO> *f_key_lis
                   convName + 1, (uint) (fieldName->Len -2), 1);
           else
             name = thd_make_lex_string(thd, name, convName, (uint) fieldName->Len, 1);
-          f_key_info.referenced_fields.push_back(name);
+          f_key_info.referenced_fields.push_back(name, thd->mem_root);
           if ((fld + 1) < FKCstDef->RefCnt)
             fieldName = fieldName + 1;                                 
         }
